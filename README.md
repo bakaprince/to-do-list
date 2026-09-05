@@ -69,6 +69,8 @@ npx firebase login
 npx firebase deploy --only hosting,firestore
 ```
 
+The Firestore configuration targets the existing named database from `firebase-applet-config.json`, so the CLI does not try to create a billing-required `(default)` database.
+
 The included GitHub Actions workflow deploys automatically from `main` or `master` after these repository secrets are configured:
 
 - `VITE_FIREBASE_API_KEY`
