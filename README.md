@@ -1,4 +1,4 @@
-# Collaborative To-Do List
+# Baka To-Do List
 
 A React and Firebase task manager with Google authentication, realtime Firestore synchronization, per-user task isolation, priorities, filters, search, editing, and completion tracking.
 
