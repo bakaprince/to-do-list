@@ -11,6 +11,14 @@ export default defineConfig(() => {
                 '@': path.resolve(__dirname, '.'),
             },
         },
+        server: {
+            host: '0.0.0.0',
+            allowedHosts: ['baka-list.onrender.com'],
+        },
+        preview: {
+            host: '0.0.0.0',
+            allowedHosts: ['baka-list.onrender.com'],
+        },
         build: {
             rollupOptions: {
                 output: {
