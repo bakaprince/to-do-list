@@ -1,11 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useTasks } from './hooks/useTasks';
-import { Navbar } from './components/Navbar';
+import { useFriends } from './hooks/useFriends';
+import { useSharedTasks } from './hooks/useSharedTasks';
+import { useSocial } from './hooks/useSocial';
+import { AppView, Navbar } from './components/Navbar';
 import { AuthGate } from './components/AuthGate';
 import { TaskInput } from './components/TaskInput';
 import { TaskStats } from './components/TaskStats';
 import { TaskList } from './components/TaskList';
+import { InsightsPage } from './components/InsightsPage';
+import { FriendsPage } from './components/FriendsPage';
 import { ConfigurationNotice } from './components/ConfigurationNotice';
 import { Priority, TaskFilter, PriorityFilter } from './types';
 import { firebaseConfigError, testConnection } from './lib/firebase';
@@ -23,11 +28,15 @@ function Dashboard() {
         deleteTask,
         updateTask,
     } = useTasks();
+    const { friendCode, friends, loading: friendsLoading, error: friendsError, addFriend, removeFriend } = useFriends();
+    const { tasks: sharedTasks } = useSharedTasks(friends);
+    const { challenges, reminders, sendReminder, createChallenge, toggleChallenge } = useSocial(friends, tasks);
 
     const [activeFilter, setActiveFilter] = useState<TaskFilter>('all');
     const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+    const [activeView, setActiveView] = useState<AppView>('tasks');
 
     // Test Firestore connection on initial boot as mandated by Firebase skill
     useEffect(() => {
@@ -38,8 +47,8 @@ function Dashboard() {
         return filterTasks(tasks, activeFilter, priorityFilter, searchQuery);
     }, [tasks, activeFilter, priorityFilter, searchQuery]);
 
-    const handleAddTask = async (title: string, priority: Priority, description?: string) => {
-        await addTask(title, priority, description);
+    const handleAddTask = async (title: string, priority: Priority, description?: string, visibility?: 'private' | 'friends') => {
+        await addTask(title, priority, description, visibility);
         setFeedbackMessage('Task created and saved to cloud.');
         setTimeout(() => setFeedbackMessage(null), 3000);
     };
@@ -55,11 +64,28 @@ function Dashboard() {
 
     return (
         <div className="min-h-screen bg-[#F7F3F0] text-[#3E362E] flex flex-col font-sans antialiased selection:bg-[#5D6D5E]/20 selection:text-[#2C332D]">
-            <Navbar />
+            <Navbar activeView={activeView} onViewChange={setActiveView} />
 
-            <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-10">
+            <main className="flex-1 w-full max-w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
                 {!user ? (
                     <AuthGate />
+                ) : activeView === 'insights' ? (
+                    <InsightsPage tasks={tasks} />
+                ) : activeView === 'friends' ? (
+                    <FriendsPage
+                        friendCode={friendCode}
+                        friends={friends}
+                        sharedTasks={sharedTasks}
+                        loading={friendsLoading}
+                        error={friendsError}
+                        onAddFriend={addFriend}
+                        onRemoveFriend={removeFriend}
+                        reminders={reminders}
+                        challenges={challenges}
+                        onRemind={sendReminder}
+                        onCreateChallenge={createChallenge}
+                        onToggleChallenge={toggleChallenge}
+                    />
                 ) : (
                     <div className="space-y-6 sm:space-y-8">
                         {/* Daily Rhythms Header & Feedback */}
@@ -150,8 +176,8 @@ function Dashboard() {
 
             {/* Footer */}
             <footer className="border-t border-[#D9CFC4] bg-[#EAE3DC]/40 py-6 text-center text-xs text-[#8C7E6F]">
-                <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-                    <span className="font-serif italic text-sm text-[#2C332D]">Rooted • Collaborative To-Do</span>
+                <div className="w-full max-w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
+                    <span className="font-serif italic text-sm text-[#2C332D]">Baka To-do List</span>
                     <div className="flex items-center gap-3 text-[#8C7E6F]">
                         <span>Strict User Isolation & Realtime Firestore Cloud</span>
                         <a className="underline underline-offset-2 hover:text-[#2C332D]" href="/privacy.html">

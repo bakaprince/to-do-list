@@ -1,6 +1,6 @@
 # Baka To-Do List
 
-A React and Firebase task manager with Google authentication, realtime Firestore synchronization, per-user task isolation, priorities, filters, search, editing, and completion tracking.
+A React and Firebase task manager with Google authentication, realtime Firestore synchronization, per-user task isolation, priorities, filters, search, editing, completion tracking, night mode, a personal insights view, and opt-in friend sharing.
 
 ## Technology Stack
 
@@ -85,6 +85,12 @@ The workflow also runs type checking and unit tests for pull requests.
 - Task ownership: one authenticated Google account per task
 - Maximum realtime task list: newest 100 tasks per account
 - Account deletion: deletes the account's tasks, profile, and Firebase Auth account
+- Insights view: completion rate, active/completed totals, and priority distribution
+- Theme preference: persistent light/night mode with system preference fallback
+- Friend sharing: connect with an 8-character code and share individual tasks only
+- Completion streaks based on completed-task dates
+- Friend reminders on explicitly shared tasks
+- Collaborative challenges where both participants track their own completion
 
 ## Firebase Free Usage
 
@@ -132,6 +138,9 @@ npm run build
 - Sign in with a second account and verify that accounts cannot read each other's tasks.
 - Verify that an unauthorized hostname produces the Firebase setup message.
 - Delete a test account and verify its tasks and profile are removed.
+- Add a second test account using the Friends page, mark one task as `Friends`, and verify the other account can see it while private tasks remain hidden.
+- Send a reminder from a shared task and verify the task owner sees it in Friends > Reminders.
+- Create a collaborative challenge and verify each participant can mark only their own completion state.
 
 ## Project Files
 
@@ -143,3 +152,9 @@ npm run build
 - `security_spec.md`: security invariants and negative test cases
 - `public/privacy.html`: privacy notice served at `/privacy.html`
 - `tests/`: unit tests and Firestore rules tests
+- `src/components/InsightsPage.tsx`: progress and priority overview
+- `src/context/ThemeContext.tsx`: persistent light/night mode state
+- `src/hooks/useFriends.ts`: friend-code connections and mutual relationships
+- `src/hooks/useSharedTasks.ts`: realtime read-only shared-task subscriptions
+- `src/hooks/useSocial.ts`: reminders and collaborative challenge actions
+- `src/lib/streak.ts`: completion streak calculation

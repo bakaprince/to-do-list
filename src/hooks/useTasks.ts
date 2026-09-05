@@ -9,10 +9,11 @@ import {
     query,
     orderBy,
     limit,
+    deleteField,
 } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Task, Priority } from '../types';
+import { Task, Priority, TaskVisibility } from '../types';
 import { normalizeTaskDescription, normalizeTaskTitle } from '../lib/taskValidation';
 
 const MAX_TASKS_PER_USER = 100;
@@ -50,9 +51,12 @@ export function useTasks() {
                         description: data.description || '',
                         completed: Boolean(data.completed),
                         priority: (data.priority as Priority) || 'medium',
+                        visibility: (data.visibility as TaskVisibility) || 'private',
                         userId: data.userId || user.uid,
                         createdAt: data.createdAt || new Date().toISOString(),
                         updatedAt: data.updatedAt,
+                        completedAt: data.completedAt,
+                        challengeId: data.challengeId,
                     });
                 });
                 setTasks(loadedTasks);
@@ -75,7 +79,7 @@ export function useTasks() {
 
     // Add Task with strict validation constraints
     const addTask = useCallback(
-        async (title: string, priority: Priority = 'medium', description: string = '') => {
+        async (title: string, priority: Priority = 'medium', description: string = '', visibility: TaskVisibility = 'private') => {
             if (!user) throw new Error('User must be signed in to add tasks.');
 
             const cleanTitle = normalizeTaskTitle(title);
@@ -91,6 +95,7 @@ export function useTasks() {
                 userId: string;
                 createdAt: string;
                 priority: Priority;
+                visibility: TaskVisibility;
                 description?: string;
             } = {
                 title: cleanTitle,
@@ -98,6 +103,7 @@ export function useTasks() {
                 userId: user.uid,
                 createdAt: new Date().toISOString(),
                 priority,
+                visibility,
             };
 
             if (cleanDesc) {
@@ -127,6 +133,7 @@ export function useTasks() {
                 await updateDoc(taskDocRef, {
                     completed: !currentCompleted,
                     updatedAt: new Date().toISOString(),
+                    completedAt: currentCompleted ? deleteField() : new Date().toISOString(),
                 });
             } catch (err) {
                 handleFirestoreError(err, OperationType.UPDATE, taskPath);
@@ -153,7 +160,7 @@ export function useTasks() {
 
     // Edit Task Title and Priority
     const updateTask = useCallback(
-        async (id: string, updates: { title?: string; priority?: Priority; description?: string }) => {
+        async (id: string, updates: { title?: string; priority?: Priority; description?: string; visibility?: TaskVisibility }) => {
             if (!user) return;
             const taskPath = `users/${user.uid}/tasks/${id}`;
             const taskDocRef = doc(db, 'users', user.uid, 'tasks', id);
@@ -174,6 +181,10 @@ export function useTasks() {
             if (updates.description !== undefined) {
                 const cleanDesc = normalizeTaskDescription(updates.description);
                 payload.description = cleanDesc;
+            }
+
+            if (updates.visibility !== undefined) {
+                payload.visibility = updates.visibility;
             }
 
             try {

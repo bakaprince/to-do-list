@@ -17,6 +17,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    function isFriend(userId) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(userId)/friends/$(request.auth.uid));
+    }
+
     function isValidId(id) {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
@@ -30,7 +34,7 @@ service cloud.firestore {
     }
 
     function isValidUserProfile(data, expectedUserId) {
-      return data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'lastLoginAt']) &&
+      return data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'lastLoginAt', 'friendCode', 'username']) &&
              data.uid == expectedUserId &&
              data.uid == request.auth.uid &&
              data.email is string &&
@@ -38,7 +42,9 @@ service cloud.firestore {
              data.email.size() <= 150 &&
              (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
              (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
-             (!('lastLoginAt' in data) || (data.lastLoginAt is string && data.lastLoginAt.size() <= 50));
+             (!('lastLoginAt' in data) || (data.lastLoginAt is string && data.lastLoginAt.size() <= 50)) &&
+             (!('friendCode' in data) || (data.friendCode is string && data.friendCode.size() == 8 && data.friendCode.matches('^[A-Z0-9]+$'))) &&
+             (!('username' in data) || (data.username is string && data.username.size() >= 3 && data.username.size() <= 20 && data.username.matches('^[a-z0-9_]+$')));
     }
 
     function isValidTask(data, expectedUserId) {
@@ -52,10 +58,28 @@ service cloud.firestore {
              data.userId == request.auth.uid &&
              data.createdAt is string &&
              data.createdAt.size() <= 50 &&
+             (!('visibility' in data) || (data.visibility in ['private', 'friends'])) &&
+             (!('completedAt' in data) || (data.completedAt is string && data.completedAt.size() <= 50)) &&
+             (!('challengeId' in data) || (data.challengeId is string && data.challengeId.size() <= 128)) &&
              (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
              (!('priority' in data) || (data.priority in ['low', 'medium', 'high'])) &&
              (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
     }
+
+    function isValidChallenge(data) {
+      return data.keys().hasOnly(['title', 'creatorId', 'participantIds', 'completedBy', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.creatorId is string && data.creatorId == request.auth.uid &&
+             data.participantIds is list && data.participantIds.size() == 2 &&
+             data.participantIds[0] == request.auth.uid &&
+             data.participantIds[1] is string && data.participantIds[1] != request.auth.uid &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)/friends/$(data.participantIds[1])) &&
+             data.completedBy is map &&
+             data.completedBy.keys().hasAll(data.participantIds) &&
+             data.completedBy[data.participantIds[0]] is bool &&
+             data.completedBy[data.participantIds[1]] is bool &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+        }
 
     // User Profile Document Rules
     match /users/{userId} {
@@ -65,33 +89,76 @@ service cloud.firestore {
                                isValidUserProfile(incoming(), userId);
       allow delete: if isOwner(userId) && isValidId(userId);
 
+      match /friends/{friendId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isSignedIn() &&
+                           isValidId(userId) &&
+                           isValidId(friendId) &&
+                           request.resource.data.keys().hasOnly(['uid', 'displayName', 'email', 'friendCode']) &&
+                           request.resource.data.uid == friendId &&
+                           request.resource.data.displayName is string &&
+                           request.resource.data.displayName.size() <= 100 &&
+                           request.resource.data.email is string &&
+                           request.resource.data.email.size() <= 150 &&
+                           request.resource.data.friendCode is string &&
+                           ((request.auth.uid == userId && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.friendCode)).data.userId == friendId) ||
+                            (request.auth.uid == friendId && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.friendCode)).data.userId == userId));
+        allow delete: if isSignedIn() && (request.auth.uid == userId || request.auth.uid == friendId);
+        allow update: if false;
+      }
+
       // Personal Subcollection: Isolated User Tasks
       match /tasks/{taskId} {
-        allow get: if isOwner(userId) && isValidId(taskId);
-        allow list: if isOwner(userId);
+        allow get: if isOwner(userId) || (isFriend(userId) && resource.data.visibility == 'friends');
+        allow list: if isOwner(userId) || (isFriend(userId) && resource.data.visibility == 'friends');
         allow create: if isOwner(userId) &&
                          isValidId(taskId) &&
-                         incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'updatedAt']) &&
-                         incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
+                         incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'visibility', 'updatedAt', 'completedAt', 'challengeId']) &&
+                         incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt', 'visibility']) &&
                          isValidTask(incoming(), userId);
         allow update: if isOwner(userId) &&
                          isValidId(taskId) &&
                          isValidTask(incoming(), userId) &&
                          incoming().userId == existing().userId &&
                          incoming().createdAt == existing().createdAt &&
-                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'updatedAt']);
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'visibility', 'updatedAt', 'completedAt', 'challengeId']);
         allow delete: if isOwner(userId) && isValidId(taskId);
+
+        match /reminders/{reminderId} {
+          allow get, list: if isOwner(userId);
+          allow create: if isFriend(userId) &&
+                             isValidId(taskId) &&
+                             isValidId(reminderId) &&
+                             get(/databases/$(database)/documents/users/$(userId)/tasks/$(taskId)).data.visibility == 'friends' &&
+                             request.resource.data.keys().hasOnly(['ownerId', 'taskId', 'senderId', 'senderName', 'createdAt']) &&
+                             request.resource.data.ownerId == userId &&
+                             request.resource.data.taskId == taskId &&
+                             request.resource.data.senderId == request.auth.uid &&
+                             request.resource.data.senderName is string &&
+                             request.resource.data.senderName.size() <= 100 &&
+                             request.resource.data.createdAt is string;
+          allow update, delete: if false;
+        }
       }
     }
 
     // Top-Level Tasks Collection Rules
+    match /friendCodes/{code} {
+      allow get: if isSignedIn() && isValidId(code);
+      allow create: if isSignedIn() &&
+                       isValidId(code) &&
+                       request.resource.data.keys().hasOnly(['userId']) &&
+                       request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     match /tasks/{taskId} {
-      allow get: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(taskId) && (existing().userId == request.auth.uid || (isFriend(existing().userId) && existing().visibility == 'friends'));
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || (isFriend(resource.data.userId) && resource.data.visibility == 'friends'));
       allow create: if isSignedIn() &&
                        isValidId(taskId) &&
-                       incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'updatedAt']) &&
-                       incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
+                       incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'visibility', 'updatedAt', 'completedAt', 'challengeId']) &&
+                       incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt', 'visibility']) &&
                        incoming().userId == request.auth.uid &&
                        isValidTask(incoming(), request.auth.uid);
       allow update: if isSignedIn() &&
@@ -100,8 +167,23 @@ service cloud.firestore {
                        existing().userId == request.auth.uid &&
                        incoming().userId == existing().userId &&
                        incoming().createdAt == existing().createdAt &&
-                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'updatedAt']);
+                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'visibility', 'updatedAt', 'completedAt', 'challengeId']);
       allow delete: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
+    }
+
+    match /challenges/{challengeId} {
+      allow get, list: if isSignedIn() && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow create: if isSignedIn() && isValidId(challengeId) && isValidChallenge(incoming());
+      allow update: if isSignedIn() &&
+                       resource.data.participantIds.hasAny([request.auth.uid]) &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['completedBy']) &&
+                       incoming().participantIds == existing().participantIds &&
+                       incoming().creatorId == existing().creatorId &&
+                       incoming().title == existing().title &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().completedBy.keys().hasAll(existing().participantIds) &&
+                       incoming().completedBy[request.auth.uid] is bool;
+      allow delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
     }
   }
 }

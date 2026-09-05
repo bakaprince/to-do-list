@@ -1,5 +1,5 @@
 {
-    "name": "Collaborative To-Do List",
-    "description": "A secure collaborative to-do list app with Google Sign-In and per-user Firestore isolation.",
+    "name": "Baka To-do List",
+    "description": "A secure Baka To-do List with Google Sign-In and per-user Firestore isolation.",
     "requestFramePermissions": []
 }

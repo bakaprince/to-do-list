@@ -16,6 +16,7 @@ const task = {
     userId: 'user-1',
     createdAt: '2026-01-01T00:00:00.000Z',
     priority: 'medium',
+    visibility: 'private',
 };
 
 describe('Firestore security rules', () => {
@@ -80,5 +81,29 @@ describe('Firestore security rules', () => {
             })
         );
         await assertSucceeds(deleteDoc(profileRef));
+    });
+
+    it('allows friends to read shared tasks but blocks private tasks', async () => {
+        const userOne = testEnvironment.authenticatedContext('user-1').firestore();
+        const userTwo = testEnvironment.authenticatedContext('user-2').firestore();
+
+        await assertSucceeds(setDoc(doc(userOne, 'friendCodes/ONECODE1'), { userId: 'user-1' }));
+        await assertSucceeds(setDoc(doc(userTwo, 'friendCodes/TWOCODE2'), { userId: 'user-2' }));
+        await assertSucceeds(setDoc(doc(userOne, 'users/user-1/friends/user-2'), {
+            uid: 'user-2', displayName: 'User Two', email: 'two@example.com', friendCode: 'TWOCODE2',
+        }));
+        await assertSucceeds(setDoc(doc(userOne, 'users/user-2/friends/user-1'), {
+            uid: 'user-1', displayName: 'User One', email: 'one@example.com', friendCode: 'TWOCODE2',
+        }));
+
+        await assertSucceeds(setDoc(doc(userTwo, 'users/user-2/tasks/shared-task'), {
+            ...task, userId: 'user-2', visibility: 'friends', title: 'Shared task',
+        }));
+        await assertSucceeds(setDoc(doc(userTwo, 'users/user-2/tasks/private-task'), {
+            ...task, userId: 'user-2', visibility: 'private', title: 'Private task',
+        }));
+
+        await assertSucceeds(getDoc(doc(userOne, 'users/user-2/tasks/shared-task')));
+        await assertFails(getDoc(doc(userOne, 'users/user-2/tasks/private-task')));
     });
 });

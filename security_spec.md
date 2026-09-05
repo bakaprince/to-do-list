@@ -15,6 +15,8 @@ This document describes the rules in `firestore.rules`. The browser app uses Goo
 - Field boundaries and string length constraints prevent resource exhaustion attacks.
 - Task titles are trimmed by the client and limited to 200 characters; descriptions are trimmed and limited to 1,000 characters.
 - Supported priority values are `low`, `medium`, and `high`.
+- Task visibility is either `private` or `friends`; only the owner can read private tasks.
+- Friend connections are mutual records created using the invited user's friend code.
 
 ## 2. The "Dirty Dozen" Payloads (Designed to Fail)
 1. **Unauthenticated Read**: Attempting to read tasks without an auth token (`request.auth == null`). Expected: `PERMISSION_DENIED`.
@@ -30,6 +32,8 @@ This document describes the rules in `firestore.rules`. The browser app uses Goo
 11. **Cross-User Deletion**: User A attempting to delete User B's task document. Expected: `PERMISSION_DENIED`.
 12. **Type Poisoning**: Sending `completed: "true"` (string instead of boolean) or `completed: 1`. Expected: `PERMISSION_DENIED`.
 13. **Priority Injection**: Sending `priority: "super-urgent"` (outside enum `['low', 'medium', 'high']`). Expected: `PERMISSION_DENIED`.
+14. **Private Friend Read**: A connected friend reading a task with `visibility: "private"`. Expected: `PERMISSION_DENIED`.
+15. **Shared Friend Read**: A connected friend reading a task with `visibility: "friends"`. Expected: success.
 
 ## 3. Enforcement Strategy
 - Global default deny on all unmatched paths: `match /{document=**} { allow read, write: if false; }`.
@@ -44,3 +48,6 @@ This document describes the rules in `firestore.rules`. The browser app uses Goo
 - Add only hostnames, without ports, to Firebase Authentication's authorized-domain list.
 - Review Firestore usage and authentication activity in the Firebase Console.
 - Account deletion removes the user's task subcollection, profile document, and Firebase Auth account. Recent authentication may be required by Firebase.
+- Friend access is read-only: friends can view explicitly shared tasks but cannot edit or delete them.
+- Friends may create reminder records only for tasks shared with them; task owners can read those reminders.
+- Challenge updates can change only the authenticated participant's completion state.

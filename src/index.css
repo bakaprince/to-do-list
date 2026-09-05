@@ -1,14 +1,117 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #F7F3F0;
-    color: #3E362E;
-  }
+    body {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #F7F3F0;
+        color: #3E362E;
+    }
 
-  h1, h2, h3, .font-serif {
-    font-family: 'Fraunces', Georgia, serif;
-  }
+    h1,
+    h2,
+    h3,
+    .font-serif {
+        font-family: 'Fraunces', Georgia, serif;
+    }
 }
 
+html {
+    color-scheme: light;
+}
+
+html[data-theme='dark'] {
+    color-scheme: dark;
+}
+
+html[data-theme='dark'] body {
+    background-color: #171b19;
+    color: #eee9df;
+}
+
+html[data-theme='dark'] .theme-toggle {
+    background-color: #252d29 !important;
+    border-color: #425149 !important;
+    color: #d7b889 !important;
+}
+
+/* Map the existing light utility palette to the night palette. */
+html[data-theme='dark'] [class*='bg-[#F7F3F0]'],
+html[data-theme='dark'] [class*='bg-[#FDFCF9]'] {
+    background-color: #1d2420 !important;
+}
+
+html[data-theme='dark'] [class*='bg-white'] {
+    background-color: #222b26 !important;
+}
+
+html[data-theme='dark'] [class*='bg-[#EAE3DC]'] {
+    background-color: #2a342f !important;
+}
+
+html[data-theme='dark'] [class*='bg-[#F0F4F2]'] {
+    background-color: #26352e !important;
+}
+
+html[data-theme='dark'] [class*='bg-[#FAF5F2]'] {
+    background-color: #352c28 !important;
+}
+
+html[data-theme='dark'] [class*='text-[#2C332D]'] {
+    color: #f1eadf !important;
+}
+
+html[data-theme='dark'] [class*='text-[#3E362E]'] {
+    color: #e5ddd1 !important;
+}
+
+html[data-theme='dark'] [class*='text-[#8C7E6F]'] {
+    color: #b9afa0 !important;
+}
+
+html[data-theme='dark'] [class*='text-[#D9CFC4]'] {
+    color: #796f64 !important;
+}
+
+html[data-theme='dark'] [class*='text-[#5D6D5E]'] {
+    color: #a6c5ad !important;
+}
+
+html[data-theme='dark'] [class*='text-[#A68A73]'] {
+    color: #d7b889 !important;
+}
+
+html[data-theme='dark'] [class*='border-[#D9CFC4]'],
+html[data-theme='dark'] [class*='border-[#EAE3DC]'] {
+    border-color: #3b4941 !important;
+}
+
+html[data-theme='dark'] [class*='border-[#5D6D5E]'] {
+    border-color: #6f9879 !important;
+}
+
+html[data-theme='dark'] input,
+html[data-theme='dark'] textarea,
+html[data-theme='dark'] select {
+    color: #eee9df;
+    caret-color: #d7b889;
+}
+
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder {
+    color: #8f958d;
+}
+
+html[data-theme='dark'] option {
+    background-color: #222b26;
+    color: #eee9df;
+}
+
+html[data-theme='dark'] [class*='hover:bg-[#F7F3F0]']:hover,
+html[data-theme='dark'] [class*='hover:bg-[#EAE3DC]']:hover,
+html[data-theme='dark'] [class*='hover:bg-[#F0F4F2]']:hover {
+    background-color: #34443a !important;
+}
+
+html[data-theme='dark'] [class*='hover:text-[#2C332D]']:hover {
+    color: #ffffff !important;
+}
