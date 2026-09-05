@@ -3,6 +3,8 @@ import {
     User,
     onAuthStateChanged,
     signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult,
     signOut,
     deleteUser,
 } from 'firebase/auth';
@@ -27,6 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        getRedirectResult(auth).catch((err: unknown) => {
+            if (err instanceof Error && !err.message.includes('auth/no-auth-event')) {
+                setError(err.message || 'Google sign-in could not be completed.');
+            }
+        });
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
             setLoading(false);
@@ -71,6 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setError('Sign-in cancelled. The popup was closed before completing.');
                 } else if (err.message.includes('auth/cancelled-popup-request')) {
                     setError('Sign-in cancelled due to multiple open attempts.');
+                } else if (err.message.includes('auth/popup-blocked')) {
+                    setError('Opening Google sign-in in this tab...');
+                    await signInWithRedirect(auth, googleProvider);
                 } else {
                     setError(err.message || 'Failed to sign in with Google. Please try again.');
                 }
