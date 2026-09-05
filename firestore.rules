@@ -29,10 +29,23 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isValidUserProfile(data, expectedUserId) {
+      return data.keys().hasOnly(['uid', 'displayName', 'email', 'photoURL', 'lastLoginAt']) &&
+             data.uid == expectedUserId &&
+             data.uid == request.auth.uid &&
+             data.email is string &&
+             data.email.size() > 0 &&
+             data.email.size() <= 150 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500)) &&
+             (!('lastLoginAt' in data) || (data.lastLoginAt is string && data.lastLoginAt.size() <= 50));
+    }
+
     function isValidTask(data, expectedUserId) {
       return data.title is string &&
              data.title.size() >= 1 &&
              data.title.size() <= 200 &&
+             data.title.matches('.*\\S.*') &&
              data.completed is bool &&
              data.userId is string &&
              data.userId == expectedUserId &&
@@ -49,11 +62,8 @@ service cloud.firestore {
       allow get: if isOwner(userId) && isValidId(userId);
       allow create, update: if isOwner(userId) &&
                                isValidId(userId) &&
-                               incoming().uid == userId &&
-                               incoming().uid == request.auth.uid &&
-                               incoming().email is string &&
-                               incoming().email.size() <= 150;
-      allow delete: if false;
+                               isValidUserProfile(incoming(), userId);
+      allow delete: if isOwner(userId) && isValidId(userId);
 
       // Personal Subcollection: Isolated User Tasks
       match /tasks/{taskId} {
@@ -61,6 +71,7 @@ service cloud.firestore {
         allow list: if isOwner(userId);
         allow create: if isOwner(userId) &&
                          isValidId(taskId) &&
+                         incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'updatedAt']) &&
                          incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
                          isValidTask(incoming(), userId);
         allow update: if isOwner(userId) &&
@@ -79,6 +90,7 @@ service cloud.firestore {
       allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isSignedIn() &&
                        isValidId(taskId) &&
+                       incoming().keys().hasOnly(['title', 'description', 'completed', 'userId', 'createdAt', 'priority', 'updatedAt']) &&
                        incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
                        incoming().userId == request.auth.uid &&
                        isValidTask(incoming(), request.auth.uid);

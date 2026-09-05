@@ -13,7 +13,7 @@ A React and Firebase task manager with Google authentication, realtime Firestore
 - **Cloud Firestore** for realtime task and user-profile data
 - **Firestore Security Rules** for authentication and ownership enforcement
 
-This repository does not contain a custom server, API, Firebase Cloud Functions, Firebase Hosting configuration, file storage, or AI API integration. Vite serves the application locally; deployment requires a separate static hosting service or Firebase Hosting setup.
+This repository does not contain a custom server, API, Firebase Cloud Functions, file storage, or AI API integration. Firebase Hosting configuration is included for production deployment.
 
 ## Requirements
 
@@ -58,6 +58,24 @@ In the Firebase Console for the project referenced by `firebase-applet-config.js
 
 The `auth/unauthorized-domain` error means the browser hostname is missing from Firebase's authorized-domain list. The app displays the hostname that needs to be added.
 
+## Deploy With Firebase Hosting
+
+Set the Firebase API key as an environment variable before building, then deploy the generated `dist` directory:
+
+```powershell
+$env:VITE_FIREBASE_API_KEY = 'your-firebase-web-api-key'
+npm run build
+npx firebase login
+npx firebase deploy --only hosting,firestore
+```
+
+The included GitHub Actions workflow deploys automatically from `main` or `master` after these repository secrets are configured:
+
+- `VITE_FIREBASE_API_KEY`
+- `FIREBASE_TOKEN`
+
+The workflow also runs type checking and unit tests for pull requests.
+
 ## Application Limits
 
 - Task title: 1 to 200 characters after trimming
@@ -65,6 +83,8 @@ The `auth/unauthorized-domain` error means the browser hostname is missing from 
 - Priority values: `low`, `medium`, or `high`
 - Task timestamps: ISO-formatted strings
 - Task ownership: one authenticated Google account per task
+- Maximum realtime task list: newest 100 tasks per account
+- Account deletion: deletes the account's tasks, profile, and Firebase Auth account
 
 ## Firebase Free Usage
 
@@ -91,12 +111,16 @@ Official references:
 
 ## Validation
 
-Run the TypeScript check and production build:
+Run the TypeScript check, unit tests, Firestore emulator rules tests, and production build:
 
 ```bash
 npm run lint
+npm run test
+npm run test:rules
 npm run build
 ```
+
+`npm run test:rules` downloads/starts the Firestore emulator and may require Java. It does not contact your production Firebase project.
 
 ## Manual Test Flow
 
@@ -107,6 +131,7 @@ npm run build
 - Try an empty title, a title over 200 characters, and a description over 1,000 characters.
 - Sign in with a second account and verify that accounts cannot read each other's tasks.
 - Verify that an unauthorized hostname produces the Firebase setup message.
+- Delete a test account and verify its tasks and profile are removed.
 
 ## Project Files
 
@@ -116,3 +141,5 @@ npm run build
 - `firestore.rules`: database authorization and validation rules
 - `firebase-blueprint.json`: Firestore entity and path schema
 - `security_spec.md`: security invariants and negative test cases
+- `public/privacy.html`: privacy notice served at `/privacy.html`
+- `tests/`: unit tests and Firestore rules tests

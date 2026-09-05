@@ -4,8 +4,9 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     signOut,
+    deleteUser,
 } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { auth, db, googleProvider, handleFirestoreError, OperationType } from '../lib/firebase';
 
 interface AuthContextType {
@@ -14,6 +15,7 @@ interface AuthContextType {
     error: string | null;
     signInWithGoogle: () => Promise<void>;
     signOutUser: () => Promise<void>;
+    deleteAccount: () => Promise<void>;
     clearError: () => void;
 }
 
@@ -88,6 +90,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const deleteAccount = async () => {
+        setError(null);
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+
+        try {
+            const tasksSnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'tasks'));
+            const taskReferences = tasksSnapshot.docs.map((taskDocument) => taskDocument.ref);
+
+            for (let index = 0; index < taskReferences.length; index += 500) {
+                const batch = writeBatch(db);
+                taskReferences.slice(index, index + 500).forEach((taskReference) => batch.delete(taskReference));
+                await batch.commit();
+            }
+
+            await deleteDoc(doc(db, 'users', currentUser.uid));
+            await deleteUser(currentUser);
+        } catch (err: unknown) {
+            console.error('Account deletion failed:', err);
+            if (err instanceof Error && err.message.includes('auth/requires-recent-login')) {
+                setError('For security, sign out and sign in again before deleting your account.');
+            } else {
+                setError(err instanceof Error ? err.message : 'Failed to delete your account.');
+            }
+        }
+    };
+
     const clearError = () => setError(null);
 
     return (
@@ -98,6 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 error,
                 signInWithGoogle,
                 signOutUser,
+                deleteAccount,
                 clearError,
             }}
         >

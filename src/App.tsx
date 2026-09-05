@@ -152,7 +152,12 @@ function Dashboard() {
             <footer className="border-t border-[#D9CFC4] bg-[#EAE3DC]/40 py-6 text-center text-xs text-[#8C7E6F]">
                 <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span className="font-serif italic text-sm text-[#2C332D]">Rooted • Collaborative To-Do</span>
-                    <span className="text-[#8C7E6F]">Strict User Isolation & Realtime Firestore Cloud</span>
+                    <div className="flex items-center gap-3 text-[#8C7E6F]">
+                        <span>Strict User Isolation & Realtime Firestore Cloud</span>
+                        <a className="underline underline-offset-2 hover:text-[#2C332D]" href="/privacy.html">
+                            Privacy
+                        </a>
+                    </div>
                 </div>
             </footer>
         </div>

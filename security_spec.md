@@ -5,6 +5,7 @@ This document describes the rules in `firestore.rules`. The browser app uses Goo
 ## 1. Data Invariants
 - Only authenticated users can access application data.
 - Each authenticated user profile is stored at `/users/{userId}` and can only be read or changed by that user.
+- An authenticated user can delete only their own profile document.
 - Each task belongs to exactly one authenticated user identified by `userId` which must match `request.auth.uid`.
 - Users cannot create tasks assigned to other users (`userId != request.auth.uid`).
 - Users cannot read, list, update, or delete tasks belonging to other users.
@@ -42,3 +43,4 @@ This document describes the rules in `firestore.rules`. The browser app uses Goo
 - Treat a committed Firebase key as exposed: rotate or restrict it before rewriting Git history and pushing again.
 - Add only hostnames, without ports, to Firebase Authentication's authorized-domain list.
 - Review Firestore usage and authentication activity in the Firebase Console.
+- Account deletion removes the user's task subcollection, profile document, and Firebase Auth account. Recent authentication may be required by Firebase.
