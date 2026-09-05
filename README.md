@@ -72,9 +72,11 @@ npx firebase deploy --only hosting,firestore
 The included GitHub Actions workflow deploys automatically from `main` or `master` after these repository secrets are configured:
 
 - `VITE_FIREBASE_API_KEY`
-- `FIREBASE_TOKEN`
+- `FIREBASE_SERVICE_ACCOUNT` containing the complete Google service-account JSON
 
 The workflow also runs type checking and unit tests for pull requests.
+
+To create the deployment secret, create a Google Cloud service account with Firebase deployment permissions, create a JSON key, and add the complete JSON contents as the GitHub repository secret `FIREBASE_SERVICE_ACCOUNT`. Never commit that JSON key. The workflow uses `google-github-actions/auth` for non-interactive deployment authentication.
 
 ## Application Limits
 
