@@ -5,13 +5,13 @@ import firebaseConfigTemplate from '../../firebase-applet-config.json';
 
 const firebaseApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
 
-if (!firebaseApiKey) {
-    throw new Error('Missing VITE_FIREBASE_API_KEY. Copy .env.example to .env.local and add your Firebase web API key.');
-}
+export const firebaseConfigError = firebaseApiKey
+    ? null
+    : 'Missing VITE_FIREBASE_API_KEY. Copy .env.example to .env.local, add your Firebase web API key, and restart the dev server.';
 
 const firebaseConfig = {
     ...firebaseConfigTemplate,
-    apiKey: firebaseApiKey,
+    apiKey: firebaseApiKey || 'missing-firebase-api-key',
 };
 
 // Initialize Firebase App singleton
