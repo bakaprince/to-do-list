@@ -108,6 +108,12 @@
                     "minLength": 8,
                     "maxLength": 8,
                     "description": "Shareable code used to connect with friends"
+                },
+                "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20,
+                    "description": "Unique username used for friend requests"
                 }
             },
             "required": [
@@ -162,6 +168,12 @@
         "/users/{userId}/friends/{friendId}": {
             "schema": "Friend",
             "description": "Mutual friend connection metadata"
+        },
+        "/users/{userId}/friendRequests/{requesterId}": {
+            "description": "Pending username-based friend request"
+        },
+        "/usernames/{username}": {
+            "description": "Unique username lookup record"
         },
         "/friendCodes/{code}": {
             "description": "Lookup record for a user's shareable friend code"

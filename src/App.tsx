@@ -28,7 +28,7 @@ function Dashboard() {
         deleteTask,
         updateTask,
     } = useTasks();
-    const { friendCode, friends, loading: friendsLoading, error: friendsError, addFriend, removeFriend } = useFriends();
+    const { username, friends, requests, loading: friendsLoading, error: friendsError, setUsername, sendFriendRequest, respondToRequest, removeFriend } = useFriends();
     const { tasks: sharedTasks } = useSharedTasks(friends);
     const { challenges, reminders, sendReminder, createChallenge, toggleChallenge } = useSocial(friends, tasks);
 
@@ -73,12 +73,15 @@ function Dashboard() {
                     <InsightsPage tasks={tasks} />
                 ) : activeView === 'friends' ? (
                     <FriendsPage
-                        friendCode={friendCode}
+                        username={username}
                         friends={friends}
+                        requests={requests}
                         sharedTasks={sharedTasks}
                         loading={friendsLoading}
                         error={friendsError}
-                        onAddFriend={addFriend}
+                        onSetUsername={setUsername}
+                        onSendRequest={sendFriendRequest}
+                        onRespondRequest={respondToRequest}
                         onRemoveFriend={removeFriend}
                         reminders={reminders}
                         challenges={challenges}

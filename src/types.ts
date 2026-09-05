@@ -30,6 +30,7 @@ export interface Friend {
     displayName: string;
     email: string;
     friendCode: string;
+    username?: string;
 }
 
 export interface FriendRequest {
@@ -39,6 +40,7 @@ export interface FriendRequest {
     fromDisplayName: string;
     fromEmail: string;
     toUid: string;
+    toUsername?: string;
     createdAt: string;
 }
 

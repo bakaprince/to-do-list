@@ -89,20 +89,37 @@ service cloud.firestore {
                                isValidUserProfile(incoming(), userId);
       allow delete: if isOwner(userId) && isValidId(userId);
 
+      match /friendRequests/{requesterId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isSignedIn() &&
+                           request.auth.uid == requesterId &&
+                           request.resource.data.keys().hasOnly(['fromUid', 'fromUsername', 'fromDisplayName', 'fromEmail', 'toUid', 'toUsername', 'createdAt']) &&
+                           request.resource.data.fromUid == request.auth.uid &&
+                           request.resource.data.toUid == userId &&
+                           request.resource.data.fromUsername is string &&
+                           request.resource.data.fromUsername.size() >= 3 &&
+                           request.resource.data.fromUsername.size() <= 20 &&
+                           get(/databases/$(database)/documents/usernames/$(request.resource.data.toUsername)).data.uid == userId;
+        allow delete: if isOwner(userId);
+        allow update: if false;
+      }
+
       match /friends/{friendId} {
         allow get, list: if isOwner(userId);
         allow create: if isSignedIn() &&
                            isValidId(userId) &&
                            isValidId(friendId) &&
-                           request.resource.data.keys().hasOnly(['uid', 'displayName', 'email', 'friendCode']) &&
+                           request.resource.data.keys().hasOnly(['uid', 'displayName', 'email', 'friendCode', 'username']) &&
                            request.resource.data.uid == friendId &&
                            request.resource.data.displayName is string &&
                            request.resource.data.displayName.size() <= 100 &&
                            request.resource.data.email is string &&
                            request.resource.data.email.size() <= 150 &&
-                           request.resource.data.friendCode is string &&
-                           ((request.auth.uid == userId && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.friendCode)).data.userId == friendId) ||
-                            (request.auth.uid == friendId && get(/databases/$(database)/documents/friendCodes/$(request.resource.data.friendCode)).data.userId == userId));
+                           request.resource.data.username is string &&
+                           request.resource.data.username.size() >= 3 &&
+                           request.resource.data.username.size() <= 20 &&
+                           ((request.auth.uid == userId && exists(/databases/$(database)/documents/users/$(userId)/friendRequests/$(friendId)) && get(/databases/$(database)/documents/users/$(userId)/friendRequests/$(friendId)).data.fromUid == friendId) ||
+                            (request.auth.uid == friendId && exists(/databases/$(database)/documents/users/$(friendId)/friendRequests/$(userId)) && get(/databases/$(database)/documents/users/$(friendId)/friendRequests/$(userId)).data.fromUid == userId));
         allow delete: if isSignedIn() && (request.auth.uid == userId || request.auth.uid == friendId);
         allow update: if false;
       }
@@ -149,6 +166,16 @@ service cloud.firestore {
                        isValidId(code) &&
                        request.resource.data.keys().hasOnly(['userId']) &&
                        request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /usernames/{username} {
+      allow get: if isSignedIn() && isValidId(username);
+      allow create: if isSignedIn() &&
+                       isValidId(username) &&
+                       !exists(/databases/$(database)/documents/usernames/$(username)) &&
+                       request.resource.data.keys().hasOnly(['uid']) &&
+                       request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
     }
 

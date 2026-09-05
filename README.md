@@ -87,7 +87,7 @@ The workflow also runs type checking and unit tests for pull requests.
 - Account deletion: deletes the account's tasks, profile, and Firebase Auth account
 - Insights view: completion rate, active/completed totals, and priority distribution
 - Theme preference: persistent light/night mode with system preference fallback
-- Friend sharing: connect with an 8-character code and share individual tasks only
+- Friend sharing: choose a username, send friend requests, and share individual tasks only
 - Completion streaks based on completed-task dates
 - Friend reminders on explicitly shared tasks
 - Collaborative challenges where both participants track their own completion
@@ -154,7 +154,7 @@ npm run build
 - `tests/`: unit tests and Firestore rules tests
 - `src/components/InsightsPage.tsx`: progress and priority overview
 - `src/context/ThemeContext.tsx`: persistent light/night mode state
-- `src/hooks/useFriends.ts`: friend-code connections and mutual relationships
+- `src/hooks/useFriends.ts`: username search, requests, and mutual relationships
 - `src/hooks/useSharedTasks.ts`: realtime read-only shared-task subscriptions
 - `src/hooks/useSocial.ts`: reminders and collaborative challenge actions
 - `src/lib/streak.ts`: completion streak calculation

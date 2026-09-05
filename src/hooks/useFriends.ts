@@ -85,6 +85,7 @@ export function useFriends() {
             fromDisplayName: user.displayName || 'User',
             fromEmail: user.email || '',
             toUid: targetUid,
+            toUsername: targetUsername,
             createdAt: new Date().toISOString(),
         });
     }, [friends, user, username]);
@@ -101,12 +102,14 @@ export function useFriends() {
             displayName: request.fromDisplayName,
             email: request.fromEmail,
             friendCode: '',
+            username: request.fromUsername,
         };
         const reverseFriend: Friend = {
             uid: user.uid,
             displayName: user.displayName || 'User',
             email: user.email || '',
             friendCode: '',
+            username,
         };
         const batch = writeBatch(db);
         batch.set(doc(db, 'users', user.uid, 'friends', request.fromUid), friend);

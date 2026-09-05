@@ -87,13 +87,18 @@ describe('Firestore security rules', () => {
         const userOne = testEnvironment.authenticatedContext('user-1').firestore();
         const userTwo = testEnvironment.authenticatedContext('user-2').firestore();
 
-        await assertSucceeds(setDoc(doc(userOne, 'friendCodes/ONECODE1'), { userId: 'user-1' }));
-        await assertSucceeds(setDoc(doc(userTwo, 'friendCodes/TWOCODE2'), { userId: 'user-2' }));
-        await assertSucceeds(setDoc(doc(userOne, 'users/user-1/friends/user-2'), {
-            uid: 'user-2', displayName: 'User Two', email: 'two@example.com', friendCode: 'TWOCODE2',
+        await assertSucceeds(setDoc(doc(userOne, 'usernames/one_user'), { uid: 'user-1' }));
+        await assertSucceeds(setDoc(doc(userTwo, 'usernames/two_user'), { uid: 'user-2' }));
+        await assertSucceeds(setDoc(doc(userOne, 'users/user-2/friendRequests/user-1'), {
+            fromUid: 'user-1', fromUsername: 'one_user', fromDisplayName: 'User One',
+            fromEmail: 'one@example.com', toUid: 'user-2', toUsername: 'two_user',
+            createdAt: '2026-01-01T00:00:00.000Z',
         }));
-        await assertSucceeds(setDoc(doc(userOne, 'users/user-2/friends/user-1'), {
-            uid: 'user-1', displayName: 'User One', email: 'one@example.com', friendCode: 'TWOCODE2',
+        await assertSucceeds(setDoc(doc(userTwo, 'users/user-1/friends/user-2'), {
+            uid: 'user-2', displayName: 'User Two', email: 'two@example.com', friendCode: '', username: 'two_user',
+        }));
+        await assertSucceeds(setDoc(doc(userTwo, 'users/user-2/friends/user-1'), {
+            uid: 'user-1', displayName: 'User One', email: 'one@example.com', friendCode: '', username: 'one_user',
         }));
 
         await assertSucceeds(setDoc(doc(userTwo, 'users/user-2/tasks/shared-task'), {
