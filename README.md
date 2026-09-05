@@ -16,13 +16,23 @@ A React and Firebase task manager with Google authentication, realtime Firestore
    npm install
    ```
 
-2. Start the development server:
+2. Create your local environment file:
+
+   ```bash
+   copy .env.example .env.local
+   ```
+
+   Replace `VITE_FIREBASE_API_KEY` in `.env.local` with the Firebase Web API key.
+
+3. Start the development server:
 
    ```bash
    npm run dev
    ```
 
-3. Open `http://localhost:3000`.
+4. Open `http://localhost:3000`.
+
+Never commit `.env.local` or place API keys in `firebase-applet-config.json`.
 
 ## Configure Google Sign-In
 
