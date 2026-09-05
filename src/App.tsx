@@ -6,8 +6,10 @@ import { AuthGate } from './components/AuthGate';
 import { TaskInput } from './components/TaskInput';
 import { TaskStats } from './components/TaskStats';
 import { TaskList } from './components/TaskList';
-import { TaskFilter, PriorityFilter } from './types';
+import { ConfigurationNotice } from './components/ConfigurationNotice';
+import { Priority, TaskFilter, PriorityFilter } from './types';
 import { firebaseConfigError, testConnection } from './lib/firebase';
+import { filterTasks } from './lib/taskFilters';
 import { AlertCircle, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 function Dashboard() {
@@ -32,31 +34,11 @@ function Dashboard() {
         testConnection();
     }, []);
 
-    // Filter tasks based on status, priority, and search keyword
     const filteredTasks = useMemo(() => {
-        return tasks.filter((task) => {
-            // Status filter
-            if (activeFilter === 'active' && task.completed) return false;
-            if (activeFilter === 'completed' && !task.completed) return false;
-
-            // Priority filter
-            if (priorityFilter !== 'all' && (task.priority || 'medium') !== priorityFilter) {
-                return false;
-            }
-
-            // Search keyword filter
-            if (searchQuery.trim()) {
-                const query = searchQuery.toLowerCase();
-                const matchesTitle = task.title.toLowerCase().includes(query);
-                const matchesDesc = task.description?.toLowerCase().includes(query);
-                if (!matchesTitle && !matchesDesc) return false;
-            }
-
-            return true;
-        });
+        return filterTasks(tasks, activeFilter, priorityFilter, searchQuery);
     }, [tasks, activeFilter, priorityFilter, searchQuery]);
 
-    const handleAddTask = async (title: string, priority: any, description?: string) => {
+    const handleAddTask = async (title: string, priority: Priority, description?: string) => {
         await addTask(title, priority, description);
         setFeedbackMessage('Task created and saved to cloud.');
         setTimeout(() => setFeedbackMessage(null), 3000);
@@ -179,15 +161,7 @@ function Dashboard() {
 
 export default function App() {
     if (firebaseConfigError) {
-        return (
-            <main className="min-h-screen bg-[#F7F3F0] px-6 py-16 text-[#3E362E]">
-                <section className="mx-auto max-w-xl rounded-3xl border border-[#D9CFC4] bg-[#FDFCF9] p-8 shadow-sm">
-                    <h1 className="font-serif text-3xl italic text-[#2C332D]">Configuration needed</h1>
-                    <p className="mt-4 text-sm leading-relaxed text-[#8C7E6F]">{firebaseConfigError}</p>
-                    <code className="mt-6 block rounded-xl bg-[#EAE3DC] p-4 text-xs text-[#3E362E]">VITE_FIREBASE_API_KEY=your-new-key</code>
-                </section>
-            </main>
-        );
+        return <ConfigurationNotice message={firebaseConfigError} />;
     }
 
     return (
