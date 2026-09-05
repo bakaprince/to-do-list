@@ -21,15 +21,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
 
     return (
         <header className="border-b border-[#D9CFC4] bg-[#FDFCF9]/90 backdrop-blur-md sticky top-0 z-30 shadow-[0_2px_12px_rgba(62,54,46,0.04)]">
-            <div className="w-full max-w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+            <div className="w-full max-w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-y-3 px-4 py-3 sm:h-18 sm:flex-nowrap sm:gap-y-0 sm:px-6 sm:py-0 lg:px-8">
                 {/* Brand identity */}
-                <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 bg-[#5D6D5E] rounded-2xl flex items-center justify-center text-white font-serif font-bold text-lg shadow-inner">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3.5">
+                    <div className="h-9 w-9 shrink-0 rounded-2xl bg-[#5D6D5E] flex items-center justify-center text-white font-serif font-bold text-lg shadow-inner sm:h-10 sm:w-10">
                         <Leaf className="w-5 h-5 text-[#FAF5F2]" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="font-serif italic text-xl sm:text-2xl text-[#2C332D] tracking-tight">
+                            <h1 className="whitespace-nowrap font-serif italic text-lg text-[#2C332D] tracking-tight sm:text-2xl">
                                 Baka To-do List
                             </h1>
                             <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#F0F4F2] text-[#5D6D5E] border border-[#D9CFC4]/50">
@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                 )}
 
                 {user && (
-                    <nav className="flex items-center gap-1 md:hidden" aria-label="Mobile navigation">
+                    <nav className="order-3 flex basis-full items-center justify-center gap-1 border-t border-[#EAE3DC] pt-2 md:hidden" aria-label="Mobile navigation">
                         <button
                             type="button"
                             onClick={() => onViewChange('tasks')}
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                 )}
 
                 {/* Auth / User controls */}
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
                     <button
                         type="button"
                         onClick={toggleTheme}
@@ -154,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeView, onViewChange }) => {
                             <button
                                 id="delete-account-button"
                                 onClick={handleDeleteAccount}
-                                className="text-[11px] font-semibold text-[#A68A73] hover:text-[#8C5F46] transition-colors"
+                                className="hidden text-[11px] font-semibold text-[#A68A73] hover:text-[#8C5F46] transition-colors sm:inline"
                                 title="Permanently delete your account and tasks"
                             >
                                 Delete account

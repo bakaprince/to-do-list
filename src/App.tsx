@@ -92,12 +92,12 @@ function Dashboard() {
                 ) : (
                     <div className="space-y-6 sm:space-y-8">
                         {/* Daily Rhythms Header & Feedback */}
-                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-[#EAE3DC]">
+                        <div className="flex flex-col gap-3 pb-2 border-b border-[#EAE3DC] sm:flex-row sm:items-end sm:justify-between sm:gap-4">
                             <div>
                                 <h2 className="text-3xl sm:text-4xl font-serif italic text-[#2C332D] leading-tight">
                                     Daily Rhythms
                                 </h2>
-                                <p className="text-sm text-[#8C7E6F] mt-1.5 font-medium flex items-center gap-2">
+                                <p className="mt-1.5 flex flex-wrap items-center gap-2 text-sm font-medium text-[#8C7E6F]">
                                     <span>
                                         You have{' '}
                                         <span className="text-[#5D6D5E] font-bold">
@@ -181,8 +181,8 @@ function Dashboard() {
             <footer className="border-t border-[#D9CFC4] bg-[#EAE3DC]/40 py-6 text-center text-xs text-[#8C7E6F]">
                 <div className="w-full max-w-full md:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span className="font-serif italic text-sm text-[#2C332D]">Baka To-do List</span>
-                    <div className="flex items-center gap-3 text-[#8C7E6F]">
-                        <span>Strict User Isolation & Realtime Firestore Cloud</span>
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-[#8C7E6F]">
+                        <span className="hidden sm:inline">Strict User Isolation & Realtime Firestore Cloud</span>
                         <a className="underline underline-offset-2 hover:text-[#2C332D]" href="/privacy.html">
                             Privacy
                         </a>

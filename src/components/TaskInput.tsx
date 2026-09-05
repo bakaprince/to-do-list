@@ -58,7 +58,7 @@ export const TaskInput: React.FC<TaskInputProps> = ({ onAddTask, disabled }) => 
         >
             <div className="flex flex-col gap-3.5">
                 {/* Main task title input */}
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <input
                         id="task-title-input"
                         type="text"
@@ -73,27 +73,29 @@ export const TaskInput: React.FC<TaskInputProps> = ({ onAddTask, disabled }) => 
                         className="w-full text-base sm:text-lg text-[#2C332D] placeholder:text-[#8C7E6F]/60 bg-transparent outline-none font-medium"
                     />
 
-                    <button
-                        id="task-submit-button"
-                        type="submit"
-                        disabled={disabled || submitting || !title.trim()}
-                        className="shrink-0 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-[#5D6D5E] text-white text-xs font-semibold hover:bg-[#4E5C4F] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-[#5D6D5E]/20 cursor-pointer"
-                    >
-                        <Plus className="w-4 h-4" />
-                        <span className="hidden sm:inline">+ Add Task</span>
-                    </button>
-                    <label className="inline-flex items-center gap-2 text-xs font-medium text-[#8C7E6F]">
-                        <span>Visibility</span>
-                        <select
-                            value={visibility}
-                            onChange={(e) => setVisibility(e.target.value as TaskVisibility)}
-                            className="rounded-xl border border-[#D9CFC4] bg-[#FDFCF9] px-2.5 py-1.5 text-xs text-[#3E362E] outline-none focus:border-[#5D6D5E]"
-                            aria-label="Task visibility"
+                    <div className="flex items-center gap-2 sm:shrink-0">
+                        <button
+                            id="task-submit-button"
+                            type="submit"
+                            disabled={disabled || submitting || !title.trim()}
+                            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#5D6D5E] px-4 py-2.5 text-xs font-semibold text-white shadow-md shadow-[#5D6D5E]/20 transition-all hover:bg-[#4E5C4F] disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:px-5"
                         >
-                            <option value="private">Private</option>
-                            <option value="friends">Friends</option>
-                        </select>
-                    </label>
+                            <Plus className="w-4 h-4" />
+                            <span className="hidden sm:inline">+ Add Task</span>
+                        </button>
+                        <label className="inline-flex shrink-0 items-center gap-1.5 text-xs font-medium text-[#8C7E6F]">
+                            <span className="hidden sm:inline">Visibility</span>
+                            <select
+                                value={visibility}
+                                onChange={(e) => setVisibility(e.target.value as TaskVisibility)}
+                                className="min-h-10 rounded-xl border border-[#D9CFC4] bg-[#FDFCF9] px-2.5 py-1.5 text-xs text-[#3E362E] outline-none focus:border-[#5D6D5E]"
+                                aria-label="Task visibility"
+                            >
+                                <option value="private">Private</option>
+                                <option value="friends">Friends</option>
+                            </select>
+                        </label>
+                    </div>
                 </div>
 
                 {/* Optional Description Input */}
@@ -125,8 +127,8 @@ export const TaskInput: React.FC<TaskInputProps> = ({ onAddTask, disabled }) => 
                                     type="button"
                                     onClick={() => setPriority(opt.value)}
                                     className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all ${priority === opt.value
-                                            ? 'bg-white text-[#2C332D] shadow-xs border border-[#D9CFC4]/50'
-                                            : 'text-[#8C7E6F] hover:text-[#2C332D]'
+                                        ? 'bg-white text-[#2C332D] shadow-xs border border-[#D9CFC4]/50'
+                                        : 'text-[#8C7E6F] hover:text-[#2C332D]'
                                         }`}
                                 >
                                     <span className={`w-1.5 h-1.5 rounded-full ${opt.dotColor}`} />
