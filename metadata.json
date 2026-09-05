@@ -1,0 +1,5 @@
+{
+    "name": "Collaborative To-Do List",
+    "description": "A secure collaborative to-do list app with Google Sign-In and per-user Firestore isolation.",
+    "requestFramePermissions": []
+}

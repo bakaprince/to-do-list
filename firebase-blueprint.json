@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "User to-do task item",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the task"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Title or task summary"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Detailed task description"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Completion state of the task"
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Priority tier of the task"
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the task owner"
+        },
+        "createdAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp of creation"
+        },
+        "updatedAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "ISO timestamp of last modification"
+        }
+      },
+      "required": ["title", "completed", "userId", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Basic profile information of the user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID of the user"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Display name of the user"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Email address of the user"
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Avatar URL of the user"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Last sign-in timestamp"
+        }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile records accessible exclusively by the document owner"
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Personal task records isolated to the authenticated user"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Direct task documents isolated to the owner userId"
+    }
+  }
+}

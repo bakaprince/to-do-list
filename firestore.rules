@@ -1,0 +1,95 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTask(data, expectedUserId) {
+      return data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 200 &&
+             data.completed is bool &&
+             data.userId is string &&
+             data.userId == expectedUserId &&
+             data.userId == request.auth.uid &&
+             data.createdAt is string &&
+             data.createdAt.size() <= 50 &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 1000)) &&
+             (!('priority' in data) || (data.priority in ['low', 'medium', 'high'])) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50));
+    }
+
+    // User Profile Document Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create, update: if isOwner(userId) &&
+                               isValidId(userId) &&
+                               incoming().uid == userId &&
+                               incoming().uid == request.auth.uid &&
+                               incoming().email is string &&
+                               incoming().email.size() <= 150;
+      allow delete: if false;
+
+      // Personal Subcollection: Isolated User Tasks
+      match /tasks/{taskId} {
+        allow get: if isOwner(userId) && isValidId(taskId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(taskId) &&
+                         incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
+                         isValidTask(incoming(), userId);
+        allow update: if isOwner(userId) &&
+                         isValidId(taskId) &&
+                         isValidTask(incoming(), userId) &&
+                         incoming().userId == existing().userId &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'updatedAt']);
+        allow delete: if isOwner(userId) && isValidId(taskId);
+      }
+    }
+
+    // Top-Level Tasks Collection Rules
+    match /tasks/{taskId} {
+      allow get: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       isValidId(taskId) &&
+                       incoming().keys().hasAll(['title', 'completed', 'userId', 'createdAt']) &&
+                       incoming().userId == request.auth.uid &&
+                       isValidTask(incoming(), request.auth.uid);
+      allow update: if isSignedIn() &&
+                       isValidId(taskId) &&
+                       isValidTask(incoming(), request.auth.uid) &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'completed', 'priority', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(taskId) && existing().userId == request.auth.uid;
+    }
+  }
+}
